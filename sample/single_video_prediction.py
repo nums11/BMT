@@ -139,7 +139,7 @@ def load_cap_model(pretrained_cap_model_path: str, device: int) -> tuple:
     # define model and load the weights
     model = BiModalTransformer(cfg, train_dataset)
     model = torch.nn.DataParallel(model, [device])
-    model.load_state_dict(cap_model_cpt['model_state_dict'])  # if IncompatibleKeys - ignore
+    model.load_state_dict(cap_model_cpt['model_state_dict'], strict=False)  # if IncompatibleKeys - ignore
     model.eval()
 
     return cfg, model, train_dataset

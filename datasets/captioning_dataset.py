@@ -7,10 +7,11 @@ from torchtext import data
 
 from datasets.load_features import fill_missing_features, load_features_from_npy
 
+import numpy as np
 
 def caption_iterator(cfg, batch_size, phase):
     print(f'Contructing caption_iterator for "{phase}" phase')
-    spacy_en = spacy.load('en')
+    spacy_en = spacy.load('en_core_web_sm')
     
     def tokenize_en(txt):
         return [token.text for token in spacy_en.tokenizer(txt)]
@@ -39,6 +40,11 @@ def caption_iterator(cfg, batch_size, phase):
     )
     CAPTION.build_vocab(dataset.caption, min_freq=cfg.min_freq_caps, vectors=cfg.word_emb_caps)
     train_vocab = CAPTION.vocab
+    # train_vocab.vocab = train_vocab.vocab.pop()
+    train_vocab.vectors = np.delete(train_vocab.vectors, (0), axis=0)
+    print("vectors", train_vocab.vectors.shape)
+
+    print("train_vocab Shape", len(train_vocab), type(train_vocab))
     
     if phase == 'val_1':
         dataset = data.TabularDataset(path=cfg.val_1_meta_path, format='tsv', skip_header=True, fields=fields)
@@ -309,7 +315,8 @@ class ActivityNetCaptionsDataset(Dataset):
         # caption dataset *iterator*
         self.train_vocab, self.caption_loader = caption_iterator(cfg, self.batch_size, self.phase)
         
-        self.trg_voc_size = len(self.train_vocab)
+        # self.trg_voc_size = len(self.train_vocab)
+        self.trg_voc_size = self.train_vocab.vectors.shape[0]
         self.pad_idx = self.train_vocab.stoi[cfg.pad_token]
         self.start_idx = self.train_vocab.stoi[cfg.start_token]
         self.end_idx = self.train_vocab.stoi[cfg.end_token]

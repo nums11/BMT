@@ -19,6 +19,9 @@ class Transformer(nn.Module):
         super(Transformer, self).__init__()
         self.modality = cfg.modality
 
+        # train_dataset.trg_voc_size = train_dataset.trg_voc_size - 1
+        print("In regular transformer voc size", train_dataset.trg_voc_size)
+
         if cfg.modality == 'video':
             self.d_model = cfg.d_model_video
             self.d_feat = cfg.d_vid
@@ -111,6 +114,8 @@ class BiModalTransformer(nn.Module):
     def __init__(self, cfg, train_dataset):
         super(BiModalTransformer, self).__init__()
 
+        # train_dataset.trg_voc_size = train_dataset.trg_voc_size - 1
+
         if cfg.use_linear_embedder:
             self.emb_A = FeatureEmbedder(cfg.d_aud, cfg.d_model_audio)
             self.emb_V = FeatureEmbedder(cfg.d_vid, cfg.d_model_video)
@@ -118,7 +123,11 @@ class BiModalTransformer(nn.Module):
             self.emb_A = Identity()
             self.emb_V = Identity()
 
+        print("In Bimodaltransformer Voc size", train_dataset.trg_voc_size)
+        print("Model caps", cfg.d_model_caps)
+
         self.emb_C = VocabularyEmbedder(train_dataset.trg_voc_size, cfg.d_model_caps)
+        print("Weight", self.emb_C.embedder.weight.shape)
         
         self.pos_enc_A = PositionalEncoder(cfg.d_model_audio, cfg.dout_p)
         self.pos_enc_V = PositionalEncoder(cfg.d_model_video, cfg.dout_p)
@@ -142,6 +151,7 @@ class BiModalTransformer(nn.Module):
                 nn.init.xavier_uniform_(p)
         # initialize embedding after, so it will replace the weights
         # of the prev. initialization
+        print("train_dataset.train_vocab.vectors.shape", train_dataset.train_vocab.vectors.shape)
         self.emb_C.init_word_embeddings(train_dataset.train_vocab.vectors, cfg.unfreeze_word_emb)
 
         # load the pretrained encoder from the proposal (used in ablation studies)

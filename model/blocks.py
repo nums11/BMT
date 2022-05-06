@@ -37,6 +37,7 @@ class VocabularyEmbedder(nn.Module):
         self.voc_size = voc_size
         self.emb_dim = emb_dim
         # replaced if pretrained weights are used
+        print("Creating embedder with voc size", voc_size)
         self.embedder = nn.Embedding(voc_size, emb_dim)
 
     def forward(self, x):  # x - tokens (B, seq_len)
@@ -50,8 +51,10 @@ class VocabularyEmbedder(nn.Module):
             print('Training word embeddings from scratch')
         else:
             pretrained_voc_size, pretrained_emb_dim = weight_matrix.shape
+            # weight_matrix = np.delete(weight_matrix, (0), axis=0)
             if self.emb_dim == pretrained_emb_dim:
                 self.embedder = self.embedder.from_pretrained(weight_matrix)
+                print("Got here. shape", self.embedder.weight.shape)
                 self.embedder.weight.requires_grad = emb_weights_req_grad
                 print('Glove emb of the same size as d_model_caps')
             else:
